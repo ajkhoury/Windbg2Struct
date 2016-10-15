@@ -77,23 +77,14 @@ def get_fields(dt_dump):
                     current_field['type'] = dt
                 
         # Pointer field type
-        elif "Ptr64" in dtype:
+        elif "Ptr64" or "Ptr32" in dtype:
             dtlist = dtype.split(' ')
             for dt in dtlist:
                 if "Ptr64" in dt:
                     current_field['pointer'] += 1
                 else:
                     current_field['type'] = dt
-            current_field['size'] = 8
-        elif "Ptr32" in dtype:
-            dtlist = dtype.split(' ')
-            for dt in dtlist:
-                if "Ptr32" in dt:
-                    current_field['pointer'] += 1
-                else:
-                    current_field['type'] = dt
-            current_field['size'] = 4
-            
+                
         # Regular field type  
         else:
             current_field['type'] = dtype
