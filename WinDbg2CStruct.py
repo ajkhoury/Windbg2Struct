@@ -42,7 +42,7 @@ def get_fields(dt_dump):
     s = s.split('+')
     
     for field in s: 
-        current_field = { 'name': "", 'type': "", 'pointer': 0, 'offset': -1, 'size': 0, 'array_size': -1, 'union': False, 'bit_pos': -1 }
+        current_field = { 'name': "", 'type': "", 'pointer': 0, 'offset': -1, 'size': 0, 'array_sizes': [], 'union': False, 'bit_pos': -1 }
     
         offset_end_idx = field.index(' ')
         current_field['offset'] = int(field[:offset_end_idx], 16)
@@ -64,33 +64,17 @@ def get_fields(dt_dump):
             
         # Array field type 
         elif '[' in dtype:
-            if "Ptr64" in dtype:
-                dtlist = dtype.split(' ')
-                for dt in dtlist:
-                    if '[' in dt:
-                        arr = dt.strip("[]") # drop the brackets
-                        current_field['array_size'] = int(arr)
-                    if "Ptr64" in dt:
-                        current_field['pointer'] += 1
-                    else:
-                        current_field['type'] = dt
-                current_field['size'] = 8
-            elif "Ptr32" in dtype:
-                dtlist = dtype.split(' ')
-                for dt in dtlist:
-                    if '[' in dt:
-                        arr = dt.strip("[]") # drop the brackets
-                        current_field['array_size'] = int(arr)
-                    if "Ptr32" in dt:
-                        current_field['pointer'] += 1
-                    else:
-                        current_field['type'] = dt
-                current_field['size'] = 4
-            else:
-                arr, dt = dtype.split(' ')
-                arr = arr.strip("[]") # drop the brackets
-                current_field['array_size'] = int(arr)
-                current_field['type'] = dt;
+            dtlist = dtype.split(' ')
+            for dt in dtlist:
+                if '[' in dt:
+                    arr = dt.strip("[]") # drop the brackets
+                    current_field['array_sizes'].append(int(arr))
+                elif "Ptr64" in dt:
+                    current_field['pointer'] += 1
+                elif "Ptr32" in dt:
+                    current_field['pointer'] += 1                    
+                else:
+                    current_field['type'] = dt
                 
         # Pointer field type
         elif "Ptr64" in dtype:
@@ -233,11 +217,10 @@ def generate_struct(dt_dump):
                         printf('*')
                         
             printf(" %s", field['name'])
-            if field['array_size'] != -1:
-                printf("[%d]; // ", field['array_size'])
-            else:
-                printf("; // ")
-            printf("0x%X\n", field['offset'])
+            if field['array_sizes']:
+                for arr_size in field['array_sizes']:
+                    printf("[%d]", arr_size)
+            printf("; // 0x%X\n", field['offset'])
             
         # To be used eventually for nested structs (maybe)
         previous_field = field
@@ -253,7 +236,6 @@ def main():
     else:
         print("Error: invalid input")        
     return
-
 
 if __name__ == "__main__":
     main()
