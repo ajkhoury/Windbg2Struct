@@ -117,14 +117,14 @@ def get_fields(dt_dump):
                 arr = arr.strip("[]") # drop the brackets
                 current_field['array_size'] = int(arr)
                 current_field['type'] = dt;
-                current_field['pointer'] = True
+                current_field['pointer'] += 1
                 current_field['size'] = 8
             elif "Ptr32" in dtype:
                 arr, ptr, dt = dtype.split(' ')
                 arr = arr.strip("[]") # drop the brackets
                 current_field['array_size'] = int(arr)
                 current_field['type'] = dt;
-                current_field['pointer'] = True
+                current_field['pointer'] += 1
                 current_field['size'] = 4
             else:
                 arr, dt = dtype.split(' ')
@@ -135,7 +135,7 @@ def get_fields(dt_dump):
         elif "Ptr64" in dtype:
             dtlist = dtype.split(' ')
             for dt in dtlist:
-                if pdt == "Ptr64":
+                if dt == "Ptr64":
                     current_field['pointer'] += 1
                 else:
                     current_field['type'] = dt
@@ -200,13 +200,19 @@ def print_union(fields, union_field):
     if union_header != 0:
         printf("\tstruct\n\t{\n")
         if union_header['type'] in key_types:
-            if union_header['pointer'] == True:
-                printf("\t\tP%s %s; // 0x%X\n", key_types[union_header['type']], union_header['name'], union_header['offset'])
+            if union_header['pointer'] > 0:
+                printf("\t\tP%s", key_types[union_header['type']])
+                for _ in range(union_header['pointer'] - 1):
+                    printf('*')
+                printf(" %s; // 0x%X\n", union_header['name'], union_header['offset'])
             else:
                 printf("\t\t%s %s; // 0x%X\n", key_types[union_header['type']], union_header['name'], union_header['offset'])
         else:
-            if union_header['pointer'] == True:
-                printf("\t\t%s* %s; // 0x%X\n", union_header['type'], union_header['name'], union_header['offset'])
+            if union_header['pointer'] > 0:
+                printf("\t\t%s", union_header['type'])
+                for _ in range(union_header['pointer']):
+                    printf('*')
+                printf(" %s; // 0x%X\n", union_header['name'], union_header['offset'])                
             else:
                 printf("\t\t%s %s; // 0x%X\n", union_header['type'], union_header['name'], union_header['offset'])
         printf("\t\tunion\n\t\t{\n")
@@ -250,20 +256,22 @@ def main():
                 continue
             else:
                 if field['type'] in key_types:
-                    if field['pointer'] == True:
-                        printf("\tP%s ", key_types[field['type']])
+                    if field['pointer'] > 0:
+                        printf("\tP%s", key_types[field['type']])
+                        for _ in range(field['pointer'] - 1):
+                            printf('*')
                     else:
-                        printf("\t%s ", key_types[field['type']])
+                        printf("\t%s", key_types[field['type']])
                 else:
                     if field['type'][0] == '_':
                         printf("\tstruct %s", field['type'])
                     else:
                         printf("\t%s", field['type'])
-                    if field['pointer'] == True:
-                        printf("* ")
-                    else:
-                        printf(" ")
-                printf("%s", field['name'])
+                    if field['pointer'] > 0:
+                        for _ in range(field['pointer']):
+                            printf('*')
+                    
+                printf(" %s", field['name'])
                 if field['array_size'] != -1:
                     printf("[%d]; // ", field['array_size'])
                 else:
