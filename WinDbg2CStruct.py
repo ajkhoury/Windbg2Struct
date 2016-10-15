@@ -156,6 +156,12 @@ def union_size(union_field):
             total = total + field['size']
     return total
 
+def find_union_header(fields, union_field):
+    for field in fields:
+        if field['union'] == True and field['offset'] == union_field['offset']:
+            return field
+    return 0
+
 def print_bitfield(bit_field):
     if bit_field['size'] > 32:
         bit_field['type'] = "ULONGLONG";
@@ -166,21 +172,35 @@ def print_bitfield(bit_field):
     else:
         bit_field['type'] = "UCHAR";
     printf("\t%s %s : %d; // 0x%X\n", bit_field['type'], bit_field['name'], bit_field['size'], bit_field['offset'])    
-
+    
 def print_union(fields, union_field):
-    printf("\tstruct\n\t{\n")
-    if union_field['type'] in key_types:
-        printf("\t\t%s %s; // 0x%X\n", key_types[union_field['type']], union_field['name'], union_field['offset'])
+    completed_fields = []
+    union_header = find_union_header(fields, union_field)
+    if union_header != 0:
+        printf("\tstruct\n\t{\n")
+        if union_header['type'] in key_types:
+            printf("\t\t%s %s; // 0x%X\n", key_types[union_header['type']], union_header['name'], union_header['offset'])
+        else:
+            printf("\t\t%s %s; // 0x%X\n", union_header['type'], union_header['name'], union_header['offset'])
+        printf("\t\tunion\n\t\t{\n")
+        for field in fields:
+            if field['union'] == False and field['bit_pos'] != -1 and field['offset'] == union_header['offset']:
+                printf("\t\t")
+                print_bitfield(field)
+                completed_fields.append(field)
+        printf("\t\t};\n")
+        printf("\t};\n")
     else:
-        printf("\t\t%s %s; // 0x%X\n", union_field['type'], union_field['name'], union_field['offset'])
-    printf("\t\tunion\n\t\t{\n")
-    for field in fields:
-        if field['union'] == False and field['bit_pos'] != -1 and field['offset'] == union_field['offset']:
-            printf("\t\t")
-            print_bitfield(field)
-    printf("\t\t};\n")
-    printf("\t};\n")
-
+        printf("\tunion\n\t{\n")
+        for field in fields:
+            if field['bit_pos'] != -1 and field['offset'] == union_field['offset']:
+                printf("\t")
+                print_bitfield(field)
+                completed_fields.append(field)
+        printf("\t};\n")
+        
+    return completed_fields
+    
 def main():
     
     dt_dump = get_input("Enter dumped WinDbg data-type: ")
@@ -191,17 +211,17 @@ def main():
             
         printf("typedef struct %s\n{\n", struct_name)
         
-        union_struct = []
+        union_fields_completed = []
         
         previous_field = None
         for field in fields:    
             # print out the type
             if field['bit_pos'] != -1:
-                # skip printing bitfields as they are printed in print_union
-                continue
+                if not any(union_field['offset'] == field['offset'] for union_field in union_fields_completed):
+                    union_fields_completed.extend(print_union(fields, field))
             elif field['union'] == True:
-                # Print entire union including the bitfields
-                print_union(fields, field)
+                # skip as its handled in print_union
+                continue
             else:
                 if field['type'] in key_types:
                     if field['pointer'] == True:
