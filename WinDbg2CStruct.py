@@ -110,23 +110,36 @@ def get_fields(dt_dump):
             pos, bit = dtype.split(',')
             current_field['bit_pos'] = int(pos[3:])
             current_field['size'] = int(bit[:bit.index('B')])
+        # Array field type 
+        elif '[' in dtype:
+            if "Ptr64" in dtype:
+                arr, ptr, dt = dtype.split(' ')
+                arr = arr.strip("[]") # drop the brackets
+                current_field['array_size'] = int(arr)
+                current_field['type'] = dt;
+                current_field['size'] = 8
+            elif "Ptr32" in dtype:
+                arr, ptr, dt = dtype.split(' ')
+                arr = arr.strip("[]") # drop the brackets
+                current_field['array_size'] = int(arr)
+                current_field['type'] = dt;
+                current_field['size'] = 4
+            else:
+                arr, dt = dtype.split(' ')
+                arr = arr.strip("[]") # drop the brackets
+                current_field['array_size'] = int(arr)
+                current_field['type'] = dt;
         # Pointer field type
-        elif ("Ptr64" in dtype):
+        elif "Ptr64" in dtype:
             ptr, dt = dtype.split(' ')
             current_field['pointer'] = True
             current_field['type'] = dt
             current_field['size'] = 8
-        elif ("Ptr32" in dtype):
+        elif "Ptr32" in dtype:
             ptr, dt = dtype.split(' ')
             current_field['pointer'] = True
             current_field['type'] = dt
-            current_field['size'] = 4                
-        # Array field type 
-        elif '[' in dtype:
-            arr, dt = dtype.split(' ')
-            arr = arr.strip("[]") # drop the brackets
-            current_field['array_size'] = int(arr)
-            current_field['type'] = dt;
+            current_field['size'] = 4
         # Regular field type  
         else:
             current_field['type'] = dtype
