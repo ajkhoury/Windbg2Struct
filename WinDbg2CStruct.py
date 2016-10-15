@@ -113,18 +113,26 @@ def get_fields(dt_dump):
         # Array field type 
         elif '[' in dtype:
             if "Ptr64" in dtype:
-                arr, ptr, dt = dtype.split(' ')
-                arr = arr.strip("[]") # drop the brackets
-                current_field['array_size'] = int(arr)
-                current_field['type'] = dt;
-                current_field['pointer'] += 1
+                dtlist = dtype.split(' ')
+                for dt in dtlist:
+                    if '[' in dt:
+                        arr = dt.strip("[]") # drop the brackets
+                        current_field['array_size'] = int(arr)
+                    if "Ptr64" in dt:
+                        current_field['pointer'] += 1
+                    else:
+                        current_field['type'] = dt
                 current_field['size'] = 8
             elif "Ptr32" in dtype:
-                arr, ptr, dt = dtype.split(' ')
-                arr = arr.strip("[]") # drop the brackets
-                current_field['array_size'] = int(arr)
-                current_field['type'] = dt;
-                current_field['pointer'] += 1
+                dtlist = dtype.split(' ')
+                for dt in dtlist:
+                    if '[' in dt:
+                        arr = dt.strip("[]") # drop the brackets
+                        current_field['array_size'] = int(arr)
+                    if "Ptr32" in dt:
+                        current_field['pointer'] += 1
+                    else:
+                        current_field['type'] = dt
                 current_field['size'] = 4
             else:
                 arr, dt = dtype.split(' ')
@@ -135,7 +143,7 @@ def get_fields(dt_dump):
         elif "Ptr64" in dtype:
             dtlist = dtype.split(' ')
             for dt in dtlist:
-                if dt == "Ptr64":
+                if "Ptr64" in dt:
                     current_field['pointer'] += 1
                 else:
                     current_field['type'] = dt
@@ -143,7 +151,7 @@ def get_fields(dt_dump):
         elif "Ptr32" in dtype:
             dtlist = dtype.split(' ')
             for dt in dtlist:
-                if pdt == "Ptr32":
+                if "Ptr32" in dt:
                     current_field['pointer'] += 1
                 else:
                     current_field['type'] = dt
@@ -161,9 +169,9 @@ def get_fields(dt_dump):
                 #print(field_list[-1]['size'])
             # check if the previous or current field is a union
             elif field_list[-1]['bit_pos'] != -1 and current_field['bit_pos'] == -1 and field_list[-1]['offset'] == current_field['offset']:
-                current_field['union'] = True;                
+                current_field['union'] = True;
             elif field_list[-1]['bit_pos'] == -1 and field_list[-1]['offset'] == current_field['offset']:
-                field_list[-1]['union'] = True;      
+                field_list[-1]['union'] = True;
     
         # Append the field to the list
         field_list.append(current_field)
