@@ -117,12 +117,14 @@ def get_fields(dt_dump):
                 arr = arr.strip("[]") # drop the brackets
                 current_field['array_size'] = int(arr)
                 current_field['type'] = dt;
+                current_field['pointer'] = True
                 current_field['size'] = 8
             elif "Ptr32" in dtype:
                 arr, ptr, dt = dtype.split(' ')
                 arr = arr.strip("[]") # drop the brackets
                 current_field['array_size'] = int(arr)
                 current_field['type'] = dt;
+                current_field['pointer'] = True
                 current_field['size'] = 4
             else:
                 arr, dt = dtype.split(' ')
