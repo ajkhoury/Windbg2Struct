@@ -7,7 +7,7 @@ def printf(format, *args):
 key_types = {
     'UChar': "UCHAR", 
     'Char': "CHAR",
-    'Wchar': "wchar_t",
+    'Wchar': "WCHAR",
     'Uint2B': "USHORT", 
     'Uint4B': "ULONG", 
     'Uint8B': "ULONG64", 
