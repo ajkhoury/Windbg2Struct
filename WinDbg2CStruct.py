@@ -136,7 +136,7 @@ def print_union(fields, union_field):
     completed_fields = []
     union_header = find_union_header(fields, union_field)
     if union_header != 0:
-        printf("\tstruct\n\t{\n")
+        printf("\tunion\n\t{\n")
         if union_header['type'] in key_types:
             if union_header['pointer'] > 0:
                 printf("\t\tP%s", key_types[union_header['type']])
@@ -153,13 +153,11 @@ def print_union(fields, union_field):
                 printf(" %s; // 0x%X\n", union_header['name'], union_header['offset'])                
             else:
                 printf("\t\t%s %s; // 0x%X\n", union_header['type'], union_header['name'], union_header['offset'])
-        printf("\t\tunion\n\t\t{\n")
         for field in fields:
             if field['union'] == False and field['bit_pos'] != -1 and field['offset'] == union_header['offset']:
-                printf("\t\t")
+                printf("\t")
                 print_bitfield(field)
                 completed_fields.append(field)
-        printf("\t\t};\n")
         printf("\t};\n")
     else:
         printf("\tunion\n\t{\n")
