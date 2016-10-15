@@ -179,9 +179,15 @@ def print_union(fields, union_field):
     if union_header != 0:
         printf("\tstruct\n\t{\n")
         if union_header['type'] in key_types:
-            printf("\t\t%s %s; // 0x%X\n", key_types[union_header['type']], union_header['name'], union_header['offset'])
+            if union_header['pointer'] == True:
+                printf("\t\tP%s %s; // 0x%X\n", key_types[union_header['type']], union_header['name'], union_header['offset'])
+            else:
+                printf("\t\t%s %s; // 0x%X\n", key_types[union_header['type']], union_header['name'], union_header['offset'])
         else:
-            printf("\t\t%s %s; // 0x%X\n", union_header['type'], union_header['name'], union_header['offset'])
+            if union_header['pointer'] == True:
+                printf("\t\t%s* %s; // 0x%X\n", union_header['type'], union_header['name'], union_header['offset'])
+            else:
+                printf("\t\t%s %s; // 0x%X\n", union_header['type'], union_header['name'], union_header['offset'])
         printf("\t\tunion\n\t\t{\n")
         for field in fields:
             if field['union'] == False and field['bit_pos'] != -1 and field['offset'] == union_header['offset']:
@@ -202,7 +208,6 @@ def print_union(fields, union_field):
     return completed_fields
     
 def main():
-    
     dt_dump = get_input("Enter dumped WinDbg data-type: ")
     if (dt_dump):
         
