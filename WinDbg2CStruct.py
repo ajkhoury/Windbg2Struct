@@ -192,65 +192,67 @@ def print_union(fields, union_field):
                 printf("\t")
                 print_bitfield(field)
                 completed_fields.append(field)
-        printf("\t};\n")
-        
+        printf("\t};\n")        
     return completed_fields
+
+def generate_struct(dt_dump):
+    # Main structure genertation method
+    struct_name = get_struct_name(dt_dump)
+    fields = get_fields(dt_dump)
+    union_fields_completed = []
+
+    printf("typedef struct %s\n{\n", struct_name)
+
+    # Need to use this eventually for nested structs maybe.
+    # Would be better to create struct list in the get_fields function
+    previous_field = None
+    
+    for field in fields:    
+        # print out the type
+        if field['bit_pos'] != -1:
+            if not any(union_field['offset'] == field['offset'] for union_field in union_fields_completed):
+                union_fields_completed.extend(print_union(fields, field))
+        elif field['union'] == True:
+            # skip as its handled in print_union
+            continue
+        else:
+            if field['type'] in key_types:
+                if field['pointer'] > 0:
+                    printf("\tP%s", key_types[field['type']])
+                    for _ in range(field['pointer'] - 1):
+                        printf('*')
+                else:
+                    printf("\t%s", key_types[field['type']])
+            else:
+                if field['type'][0] == '_':
+                    printf("\tstruct %s", field['type'])
+                else:
+                    printf("\t%s", field['type'])
+                if field['pointer'] > 0:
+                    for _ in range(field['pointer']):
+                        printf('*')
+                        
+            printf(" %s", field['name'])
+            if field['array_size'] != -1:
+                printf("[%d]; // ", field['array_size'])
+            else:
+                printf("; // ")
+            printf("0x%X\n", field['offset'])
+            
+        # To be used eventually for nested structs (maybe)
+        previous_field = field
+        
+    struct_name = struct_name[1:]
+    printf("} %s, *P%s;\n", struct_name, struct_name)     
+
     
 def main():
     dt_dump = get_input("Enter dumped WinDbg data-type: ")
     if (dt_dump):
-        
-        struct_name = get_struct_name(dt_dump)
-        fields = get_fields(dt_dump)
-            
-        printf("typedef struct %s\n{\n", struct_name)
-        
-        union_fields_completed = []
-        
-        previous_field = None
-        for field in fields:    
-            # print out the type
-            if field['bit_pos'] != -1:
-                if not any(union_field['offset'] == field['offset'] for union_field in union_fields_completed):
-                    union_fields_completed.extend(print_union(fields, field))
-            elif field['union'] == True:
-                # skip as its handled in print_union
-                continue
-            else:
-                if field['type'] in key_types:
-                    if field['pointer'] > 0:
-                        printf("\tP%s", key_types[field['type']])
-                        for _ in range(field['pointer'] - 1):
-                            printf('*')
-                    else:
-                        printf("\t%s", key_types[field['type']])
-                else:
-                    if field['type'][0] == '_':
-                        printf("\tstruct %s", field['type'])
-                    else:
-                        printf("\t%s", field['type'])
-                    if field['pointer'] > 0:
-                        for _ in range(field['pointer']):
-                            printf('*')
-                    
-                printf(" %s", field['name'])
-                if field['array_size'] != -1:
-                    printf("[%d]; // ", field['array_size'])
-                else:
-                    printf("; // ")
-                printf("0x%X\n", field['offset'])
-                
-            previous_field = field
-        
-        struct_name = struct_name[1:]
-        printf("} %s, *P%s;\n", struct_name, struct_name) 
-        
+        generate_struct(dt_dump)
     else:
-        print("Error: invalid input")    
-    
+        print("Error: invalid input")        
     return
-
-
 
 
 if __name__ == "__main__":
