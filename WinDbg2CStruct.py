@@ -91,7 +91,7 @@ def get_fields(dt_dump):
     s = s.split('+')
     
     for field in s: 
-        current_field = { 'name': "", 'type': "", 'pointer': False, 'offset': -1, 'size': 0, 'array_size': -1, 'union': False, 'bit_pos': -1 }
+        current_field = { 'name': "", 'type': "", 'pointer': 0, 'offset': -1, 'size': 0, 'array_size': -1, 'union': False, 'bit_pos': -1 }
     
         offset_end_idx = field.index(' ')
         current_field['offset'] = int(field[:offset_end_idx], 16)
@@ -133,14 +133,20 @@ def get_fields(dt_dump):
                 current_field['type'] = dt;
         # Pointer field type
         elif "Ptr64" in dtype:
-            ptr, dt = dtype.split(' ')
-            current_field['pointer'] = True
-            current_field['type'] = dt
+            dtlist = dtype.split(' ')
+            for dt in dtlist:
+                if pdt == "Ptr64":
+                    current_field['pointer'] += 1
+                else:
+                    current_field['type'] = dt
             current_field['size'] = 8
         elif "Ptr32" in dtype:
-            ptr, dt = dtype.split(' ')
-            current_field['pointer'] = True
-            current_field['type'] = dt
+            dtlist = dtype.split(' ')
+            for dt in dtlist:
+                if pdt == "Ptr32":
+                    current_field['pointer'] += 1
+                else:
+                    current_field['type'] = dt
             current_field['size'] = 4
         # Regular field type  
         else:
