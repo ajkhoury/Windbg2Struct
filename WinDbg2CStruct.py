@@ -156,12 +156,28 @@ def print_union(fields, union_field):
                 completed_fields.append(field)
         printf("\t\t};\n\t};\n")
     else:
-        printf("\tunion\n\t{\n")
+        printf("\tstruct\n\t{\n")
+        bit_field_type = "ULONG"
+        bit_fields_sum = 0
+        bit_fields = []
         for field in fields:
             if field['bit_pos'] != -1 and field['offset'] == union_field['offset']:
-                printf("\t")
-                print_bitfield(field)
+                bit_fields.append(field)
+                bit_fields_sum += field['size']
                 completed_fields.append(field)
+        # Get type based on sum of bits
+        if bit_fields_sum > 32:
+            bit_field_type = "ULONGLONG"
+        elif bit_fields_sum > 16:
+            bit_field_type = "ULONG"  
+        elif bit_fields_sum > 8:
+            bit_field_type = "USHORT"
+        else:
+            bit_field_type = "UCHAR"
+        # Dump the bitfields  
+        for bit_field in bit_fields:
+            printf("\t")
+            print_bitfield(bit_field, bit_field_type)
         printf("\t};\n")        
     return completed_fields
 
