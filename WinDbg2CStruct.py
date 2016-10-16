@@ -121,16 +121,8 @@ def find_union_header(fields, union_field):
             return field
     return 0
 
-def print_bitfield(bit_field):
-    if bit_field['size'] > 32:
-        bit_field['type'] = "ULONGLONG";
-    elif bit_field['size'] > 16:
-        bit_field['type'] = "ULONG";
-    elif bit_field['size'] > 8:
-        bit_field['type'] = "USHORT";
-    else:
-        bit_field['type'] = "UCHAR";
-    printf("\t%s %s : %d; // 0x%X\n", bit_field['type'], bit_field['name'], bit_field['size'], bit_field['offset'])    
+def print_bitfield(bit_field, bit_field_type):
+    printf("\t%s %s : %d; // 0x%X\n", bit_field_type, bit_field['name'], bit_field['size'], bit_field['offset'])    
     
 def print_union(fields, union_field):
     completed_fields = []
@@ -157,7 +149,10 @@ def print_union(fields, union_field):
         for field in fields:
             if field['union'] == False and field['bit_pos'] != -1 and field['offset'] == union_header['offset']:
                 printf("\t\t")
-                print_bitfield(field)
+                if union_header['type'] in key_types:
+                    print_bitfield(field, key_types[union_header['type']])
+                else:
+                    print_bitfield(field, union_header['type'])
                 completed_fields.append(field)
         printf("\t\t};\n\t};\n")
     else:
