@@ -6,7 +6,7 @@ Still not able to properly handle nested unions and structs.
 
 ## License
 
-Copyright (C) 2016 dude719
+Copyright (C) 2016 Aidan Khoury (dude719)
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
