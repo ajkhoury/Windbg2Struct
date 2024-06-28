@@ -18,13 +18,13 @@ key_types = {
 }
 
 def get_input(prompt):
-    print prompt,
+    print(prompt)
     lines = []
-    line = raw_input()
+    line = input()
     while line != "":
         line = line.replace("\t", "")
         lines.append(line)
-        line = raw_input()
+        line = input()
     lines = ''.join(lines)
     return lines
 
